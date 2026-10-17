@@ -3,45 +3,25 @@ import '../../models/resume_data.dart';
 import 'resume_sections_screen.dart';
 
 class PersonalDetailsScreen extends StatefulWidget {
-  const PersonalDetailsScreen({super.key});
+  const PersonalDetailsScreen({super.key,this.existing});
+  final ResumeData? existing;
   @override State<PersonalDetailsScreen> createState()=>_PersonalDetailsScreenState();
 }
-
 class _PersonalDetailsScreenState extends State<PersonalDetailsScreen>{
-  final formKey=GlobalKey<FormState>();
-  final data=ResumeData();
-  bool optional=false;
-
-  Widget field(String label, void Function(String) save,{bool required=false,TextInputType? type})=>
-    Padding(padding:const EdgeInsets.only(bottom:14),child:TextFormField(
-      keyboardType:type, decoration:InputDecoration(labelText:label),
-      validator:required?(v)=>v==null||v.trim().isEmpty?'Required':null,
-      onSaved:(v)=>save(v?.trim()??'')));
-
-  void next(){
-    if(!formKey.currentState!.validate()) return;
-    formKey.currentState!.save();
-    Navigator.push(context,MaterialPageRoute(builder:(_)=>ResumeSectionsScreen(data:data)));
-  }
-
-  @override Widget build(BuildContext context)=>Scaffold(
-    appBar:AppBar(title:const Text('Personal Details')),
-    body:Form(key:formKey,child:ListView(padding:const EdgeInsets.all(20),children:[
-      Text('Tell us about you',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight:FontWeight.bold)),
-      const SizedBox(height:6),const Text('Only include information you want on your resume.'),const SizedBox(height:24),
-      field('Full Name',(v)=>data.fullName=v,required:true),
-      field('Professional Title / Job Role',(v)=>data.jobTitle=v,required:true),
-      field('Mobile Number',(v)=>data.phone=v,required:true,type:TextInputType.phone),
-      field('Email Address',(v)=>data.email=v,required:true,type:TextInputType.emailAddress),
-      field('City',(v)=>data.city=v),field('State',(v)=>data.state=v),field('Country',(v)=>data.country=v),
-      const SizedBox(height:8),Text('Professional Links',style:Theme.of(context).textTheme.titleMedium),const SizedBox(height:12),
-      field('LinkedIn',(v)=>data.linkedIn=v),field('Portfolio / Website',(v)=>data.portfolio=v),field('GitHub',(v)=>data.github=v),
-      SwitchListTile(contentPadding:EdgeInsets.zero,title:const Text('Add optional personal details'),
-        subtitle:const Text('Enable only when the employer or CV format requires them.'),
-        value:optional,onChanged:(v)=>setState(()=>optional=v)),
-      if(optional)...[
-        field('Full Address',(_){ }),field('PIN Code',(_){ },type:TextInputType.number),
-        field('Date of Birth',(_){ }),field('Nationality',(_){ }),field('Marital Status',(_){ })],
-      const SizedBox(height:20),FilledButton(onPressed:next,child:const Text('Save & Continue'))
-    ])));
+  final formKey=GlobalKey<FormState>(); late final ResumeData data;
+  late final Map<String,TextEditingController> c;
+  @override void initState(){super.initState();data=widget.existing??ResumeData();c={
+    'name':TextEditingController(text:data.fullName),'title':TextEditingController(text:data.jobTitle),'phone':TextEditingController(text:data.phone),
+    'email':TextEditingController(text:data.email),'city':TextEditingController(text:data.city),'state':TextEditingController(text:data.state),
+    'country':TextEditingController(text:data.country),'linkedin':TextEditingController(text:data.linkedIn),'portfolio':TextEditingController(text:data.portfolio),'github':TextEditingController(text:data.github)};}
+  Widget field(String key,String label,{bool required=false,TextInputType? type})=>Padding(padding:const EdgeInsets.only(bottom:14),child:TextFormField(controller:c[key],keyboardType:type,decoration:InputDecoration(labelText:label),validator:required?(v)=>v==null||v.trim().isEmpty?'Required':null));
+  void next(){if(!formKey.currentState!.validate())return;data.fullName=c['name']!.text.trim();data.jobTitle=c['title']!.text.trim();data.phone=c['phone']!.text.trim();data.email=c['email']!.text.trim();data.city=c['city']!.text.trim();data.state=c['state']!.text.trim();data.country=c['country']!.text.trim();data.linkedIn=c['linkedin']!.text.trim();data.portfolio=c['portfolio']!.text.trim();data.github=c['github']!.text.trim();Navigator.push(context,MaterialPageRoute(builder:(_)=>ResumeSectionsScreen(data:data)));}
+  @override Widget build(BuildContext context)=>Scaffold(appBar:AppBar(title:Text(widget.existing==null?'Personal Details':'Edit Personal Details')),body:Form(key:formKey,child:ListView(padding:const EdgeInsets.all(20),children:[
+    Text('Tell us about you',style:Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight:FontWeight.bold)),const SizedBox(height:20),
+    field('name','Full Name',required:true),field('title','Professional Title / Job Role',required:true),field('phone','Mobile Number',required:true,type:TextInputType.phone),
+    field('email','Email Address',required:true,type:TextInputType.emailAddress),field('city','City'),field('state','State'),field('country','Country'),
+    const SizedBox(height:8),Text('Professional Links',style:Theme.of(context).textTheme.titleMedium),const SizedBox(height:12),
+    field('linkedin','LinkedIn'),field('portfolio','Portfolio / Website'),field('github','GitHub'),const SizedBox(height:18),
+    FilledButton(onPressed:next,child:const Text('Save & Continue'))
+  ])));
 }
